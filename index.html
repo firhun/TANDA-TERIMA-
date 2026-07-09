@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nota Sales — Tanda Terima</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F4F5F7; --card:#FFFFFF; --ink:#111827; --muted:#6B7280; --faint:#9CA3AF;
+  --line:#E5E7EB; --line2:#D1D5DB;
+  --accent:#4F46E5; --accent-soft:#E0E7FF; --accent-ink:#3730A3;
+  --warn:#D97706; --warn-soft:#FEF3C7; --warn-ink:#92400E;
+  --ok:#059669; --ok-soft:#D1FAE5; --ok-ink:#065F46;
+  --danger:#DC2626; --danger-soft:#FEE2E2; --danger-ink:#991B1B;
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+  --sans:'Inter',system-ui,-apple-system,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--bg);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased}
+button,input,select{font-family:inherit;font-size:inherit;color:inherit}
+button{cursor:pointer;border:none;background:none}
+::selection{background:var(--accent-soft)}
+
+.app{display:flex;min-height:100vh}
+
+/* Sidebar */
+.side{width:224px;flex-shrink:0;background:var(--card);border-right:1px solid var(--line);position:sticky;top:0;height:100vh;display:flex;flex-direction:column}
+.brand{padding:20px 18px 16px}
+.brand .logo{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:600;letter-spacing:-.2px}
+.brand .mark{width:28px;height:28px;border-radius:9px;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
+.brand .toko{font-size:12px;color:var(--muted);margin-top:8px;padding-left:38px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+nav{padding:6px 12px;flex:1}
+.navbtn{width:100%;text-align:left;padding:9px 12px;border-radius:10px;color:var(--muted);font-size:13.5px;font-weight:500;display:flex;align-items:center;gap:11px;margin-bottom:2px;transition:background .12s,color .12s}
+.navbtn:hover{background:var(--bg);color:var(--ink)}
+.navbtn.active{background:var(--accent-soft);color:var(--accent-ink);font-weight:600}
+.navbtn .ic{width:16px;text-align:center;font-size:14px;flex-shrink:0}
+.badge-n{margin-left:auto;background:var(--warn-soft);color:var(--warn-ink);font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:20px;font-family:var(--mono)}
+.navbtn.active .badge-n{background:#fff}
+.side-foot{padding:14px 18px;font-size:11px;color:var(--faint);border-top:1px solid var(--line);line-height:1.5}
+
+.main{flex:1;min-width:0;padding:30px 34px 60px;max-width:1080px}
+.head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+.head h1{font-size:21px;font-weight:600;letter-spacing:-.3px}
+.head p{color:var(--muted);font-size:13px;margin-top:2px}
+
+/* Buttons */
+.btn{padding:9px 16px;border-radius:20px;font-weight:500;font-size:13.5px;display:inline-flex;align-items:center;gap:7px;transition:filter .12s,background .12s;white-space:nowrap}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{filter:brightness(1.1)}
+.btn-ghost{background:var(--card);border:1px solid var(--line2);color:var(--ink)}
+.btn-ghost:hover{background:var(--bg)}
+.btn-danger{background:var(--danger-soft);color:var(--danger-ink)}
+.btn-danger:hover{filter:brightness(.97)}
+.btn-sm{padding:7px 13px;font-size:12.5px}
+.btn:disabled{opacity:.45;cursor:not-allowed;filter:none}
+.row-actions{display:flex;gap:9px;flex-wrap:wrap}
+
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px;margin-bottom:18px}
+.stat{background:var(--card);border-radius:12px;padding:13px 15px}
+.stat .lbl{font-size:11.5px;color:var(--muted)}
+.stat .val{font-size:17px;font-weight:600;margin-top:4px;letter-spacing:-.2px}
+.stat .bar{height:3px;border-radius:20px;margin-top:9px;overflow:hidden}
+.stat .bar i{display:block;height:3px;border-radius:20px}
+.stat .sub{font-size:11px;color:var(--faint);margin-top:6px;font-family:var(--mono)}
+
+/* Toolbar */
+.toolbar{display:flex;gap:9px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.search{flex:1;min-width:170px;position:relative}
+.search input{width:100%;padding:9px 12px 9px 34px;border:1px solid var(--line);border-radius:20px;background:var(--card);font-size:13.5px}
+.search input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.search .ic{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--faint);font-size:13px}
+.segmented{display:inline-flex;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:3px;gap:2px}
+.segmented button{padding:6px 13px;font-size:12.5px;font-weight:500;color:var(--muted);border-radius:20px}
+.segmented button.active{background:var(--accent);color:#fff}
+
+/* Nota card rows */
+.list{display:flex;flex-direction:column;gap:8px}
+.nrow{background:var(--card);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:12px;border:1px solid transparent;transition:border .12s}
+.nrow:hover{border-color:var(--line2)}
+.nrow .av{width:38px;height:38px;flex-shrink:0;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600}
+.nrow .av.belum{background:var(--warn-soft);color:var(--warn-ink)}
+.nrow .av.sudah{background:var(--ok-soft);color:var(--ok-ink)}
+.nrow .body{flex:1;min-width:0}
+.nrow .sup{font-size:13.5px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nrow .meta{font-size:11.5px;color:var(--muted);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nrow .meta .fk{font-family:var(--mono);color:var(--ink)}
+.nrow .right{text-align:right;flex-shrink:0}
+.nrow .amt{font-size:13.5px;font-weight:600;font-family:var(--mono);letter-spacing:-.3px}
+.nrow .acts{display:flex;gap:2px;flex-shrink:0;opacity:0;transition:opacity .12s}
+.nrow:hover .acts,.nrow:focus-within .acts{opacity:1}
+.iconbtn{width:30px;height:30px;border-radius:8px;color:var(--faint);font-size:14px;display:flex;align-items:center;justify-content:center}
+.iconbtn:hover{background:var(--bg);color:var(--ink)}
+.iconbtn.del:hover{background:var(--danger-soft);color:var(--danger-ink)}
+.pill{font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:20px;display:inline-block;margin-top:3px}
+.pill.belum{background:var(--warn-soft);color:var(--warn-ink)}
+.pill.sudah{background:var(--ok-soft);color:var(--ok-ink)}
+
+.empty{background:var(--card);border-radius:12px;text-align:center;padding:50px 20px;color:var(--muted)}
+.empty .big{font-size:30px;opacity:.3;margin-bottom:8px}
+.empty p{font-size:13.5px}
+
+/* Cards & forms */
+.card{background:var(--card);border-radius:12px;padding:22px 24px}
+.card h2{font-size:15px;font-weight:600;margin-bottom:3px}
+.card .hint{font-size:12.5px;color:var(--muted);margin-bottom:18px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:12.5px;font-weight:500;margin-bottom:6px;color:var(--ink)}
+.field .req{color:var(--danger)}
+.field input{width:100%;padding:9px 12px;border:1px solid var(--line2);border-radius:10px;background:var(--card);font-size:13.5px;transition:border .12s,box-shadow .12s}
+.field input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.field.mono input{font-family:var(--mono)}
+.rp-wrap{position:relative}
+.rp-wrap .rp{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--faint);font-size:13px;pointer-events:none}
+.rp-wrap input{padding-left:36px;font-family:var(--mono)}
+.err-line{font-size:11.5px;color:var(--danger-ink);margin-top:5px;display:none}
+.field.bad input{border-color:var(--danger)}
+.field.bad .err-line{display:block}
+
+/* Picker */
+.selbar{display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--accent-soft);border-radius:12px;padding:11px 16px;margin-bottom:12px;flex-wrap:wrap}
+.selbar .info{font-size:13px;color:var(--accent-ink)}
+.selbar b{font-family:var(--mono);font-weight:700}
+.prow{cursor:pointer;user-select:none}
+.prow.on{border-color:var(--accent);background:#FAFAFF}
+.cbx{width:18px;height:18px;flex-shrink:0;border:1.5px solid var(--line2);border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;background:var(--card)}
+.prow.on .cbx{background:var(--accent);border-color:var(--accent)}
+.warnrow{background:var(--warn-soft);color:var(--warn-ink);border-radius:10px;padding:9px 13px;font-size:12.5px;margin-bottom:12px}
+
+/* ===== Tanda Terima document ===== */
+.tt-doc{background:#fff;border-radius:12px;padding:40px 44px;max-width:740px;margin:0 auto;position:relative;color:#000;border:1px solid var(--line)}
+.tt-head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;border-bottom:2.5px solid #000;padding-bottom:14px}
+.tt-toko{font-size:19px;font-weight:700;letter-spacing:-.3px;color:#000}
+.tt-toko .tag{font-weight:400;font-size:12px;color:#444;margin-top:3px;letter-spacing:0;max-width:300px}
+.tt-title{text-align:right;flex-shrink:0}
+.tt-title .t{font-size:17px;font-weight:700;letter-spacing:2.5px;color:#000}
+.tt-title .n{font-family:var(--mono);font-size:12.5px;font-weight:500;color:#000;margin-top:3px}
+.tt-lead{font-size:12.5px;margin:16px 0 8px;color:#000;font-weight:500}
+table.tt-info{border-collapse:collapse;width:100%}
+table.tt-info td{padding:3px 0;font-size:12.5px;vertical-align:top;color:#000}
+table.tt-info td.k{color:#444;width:180px;padding-right:12px;font-weight:400}
+table.tt-info td.k::after{content:":";float:right}
+table.tt-info td.v{font-weight:600}
+table.tt-tbl{width:100%;border-collapse:collapse;margin:6px 0 10px;table-layout:fixed}
+table.tt-tbl th{background:#EDEDED;border:1px solid #000;padding:7px 8px;font-size:9.5px;color:#000;font-weight:700;text-transform:uppercase;letter-spacing:.5px;text-align:left}
+table.tt-tbl td{border:1px solid #000;padding:7px 8px;font-size:11.5px;color:#000;word-break:break-word}
+table.tt-tbl td.f{font-family:var(--mono);font-weight:500}
+table.tt-tbl td.d{font-family:var(--mono);font-size:10.5px;white-space:nowrap}
+table.tt-tbl td.rek{font-family:var(--mono);font-size:10.5px}
+table.tt-tbl td.n{font-family:var(--mono);text-align:right;white-space:nowrap;font-weight:500}
+table.tt-tbl tr.total td{background:#EDEDED;font-weight:700;font-size:12.5px}
+.terbilang{font-size:11.5px;color:#000;border:1px solid #000;border-left-width:4px;padding:8px 12px;margin-bottom:14px}
+.terbilang .lb{font-weight:700;text-transform:uppercase;font-size:9.5px;letter-spacing:.5px;display:block;margin-bottom:2px}
+.terbilang b{font-style:italic;font-weight:600}
+.rek-block{border:1px solid #000;border-radius:0;padding:9px 12px;margin-bottom:22px}
+.rek-h{font-size:9.5px;text-transform:uppercase;letter-spacing:.5px;color:#000;font-weight:700;margin-bottom:5px}
+.rek-r{font-family:var(--mono);font-size:11.5px;padding:2px 0;color:#000}
+.tt-sign{display:flex;justify-content:space-between;gap:20px;margin-top:16px}
+.sign-box{text-align:center;width:230px}
+.sign-box .role{font-size:12px;color:#000;margin-bottom:64px}
+.sign-box .name{border-top:1.5px solid #000;padding-top:5px;font-weight:700;font-size:12.5px}
+.sign-box .cap{font-size:10px;color:#444;margin-top:1px}
+.tt-note{font-size:10px;color:#333;text-align:center;margin-top:22px;padding-top:10px;border-top:1px dashed #999}
+.stamp-mark{position:absolute;right:56px;bottom:118px;border:2.5px solid #000;color:#000;font-weight:700;font-size:13px;letter-spacing:2px;padding:7px 14px;transform:rotate(-10deg);opacity:.55}
+.print-actions{display:flex;gap:9px;justify-content:center;margin-top:18px;flex-wrap:wrap}
+
+/* Riwayat TT */
+.trow{background:var(--card);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:12px}
+.trow .no{font-family:var(--mono);font-size:12.5px;font-weight:600;background:var(--accent-soft);color:var(--accent-ink);padding:5px 10px;border-radius:8px;flex-shrink:0}
+
+/* Backup */
+.bkgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.bk{background:var(--bg);border-radius:12px;padding:16px 18px}
+.bk h3{font-size:13.5px;font-weight:600;margin-bottom:3px}
+.bk p{font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.5}
+.warnbox{background:var(--warn-soft);border-radius:12px;padding:13px 16px;font-size:12.5px;color:var(--warn-ink);margin-top:16px;line-height:1.55}
+
+/* Toast + modal */
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--ink);color:#fff;padding:11px 18px;border-radius:20px;font-size:13px;font-weight:500;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:100;max-width:90vw;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.ok{background:var(--ok)}
+.toast.err{background:var(--danger)}
+.overlay{position:fixed;inset:0;background:rgba(17,24,39,.45);display:none;align-items:center;justify-content:center;z-index:90;padding:20px}
+.overlay.show{display:flex}
+.modal{background:var(--card);border-radius:16px;padding:24px;max-width:400px;width:100%}
+.modal h3{font-size:16px;font-weight:600;margin-bottom:6px}
+.modal p{font-size:13px;color:var(--muted);margin-bottom:18px;line-height:1.55}
+.modal .row-actions{justify-content:flex-end}
+
+.view{display:none}
+.view.active{display:block;animation:fade .18s ease}
+@keyframes fade{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}}
+
+@media (max-width:860px){
+  .app{flex-direction:column}
+  .side{width:100%;height:auto;position:static;flex-direction:row;align-items:center;overflow-x:auto;border-right:none;border-bottom:1px solid var(--line)}
+  .brand{padding:12px 14px;flex-shrink:0}.brand .toko{display:none}
+  nav{display:flex;padding:8px;gap:3px}
+  .navbtn{margin:0;white-space:nowrap}.navbtn .txt{display:none}
+  .badge-n{margin-left:2px}
+  .side-foot{display:none}
+  .main{padding:20px 16px 50px}
+  .stats{grid-template-columns:1fr}
+  .tt-doc{padding:24px 20px}
+  .stamp-mark{right:18px;bottom:104px}
+  .tt-sign{flex-direction:column;gap:26px;align-items:center}
+  .nrow .acts{opacity:1}
+}
+
+/* ===== PRINT: tegas, hitam-putih, A4 ===== */
+#print-region{display:none}
+@media print{
+  @page{size:A4 portrait;margin:15mm 14mm}
+  html,body{background:#fff !important;color:#000 !important}
+  .app,.toast,.overlay,.print-actions,.no-print{display:none !important}
+  #print-region{display:block !important}
+  .tt-doc{border:none !important;border-radius:0 !important;max-width:100% !important;padding:0 !important;margin:0 !important;box-shadow:none !important}
+  .tt-doc,.tt-doc *{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;color:#000 !important}
+  .tt-doc{font-size:11pt}
+  .tt-head{border-bottom:3px solid #000 !important}
+  .tt-toko{font-size:17pt}
+  .tt-title .t{font-size:15pt;letter-spacing:3px}
+  .tt-title .n{font-size:10.5pt}
+  table.tt-info td{font-size:10.5pt;padding:2.5pt 0}
+  table.tt-tbl th{border:1.2px solid #000 !important;background:#E8E8E8 !important;font-size:8pt}
+  table.tt-tbl td{border:1.2px solid #000 !important;font-size:9.5pt}
+  table.tt-tbl td.d,table.tt-tbl td.rek{font-size:8.5pt}
+  table.tt-tbl tr.total td{background:#E8E8E8 !important;font-size:10.5pt}
+  .terbilang{border:1.2px solid #000 !important;border-left-width:4px !important;font-size:9.5pt}
+  .rek-block{border:1.2px solid #000 !important}
+  .rek-r{font-size:9.5pt}
+  .sign-box .name{border-top:1.5px solid #000 !important}
+  .stamp-mark{border:2.5px solid #000 !important;opacity:.6}
+  .tt-note{border-top:1px dashed #666 !important;font-size:8pt}
+  table.tt-tbl thead{display:table-header-group}
+  table.tt-tbl tr,.tt-sign,.rek-block,.terbilang{page-break-inside:avoid;break-inside:avoid}
+  .tt-head{page-break-after:avoid}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="brand">
+      <div class="logo"><span class="mark">NS</span> Nota sales</div>
+      <div class="toko" id="side-toko">Belum diatur</div>
+    </div>
+    <nav>
+      <button class="navbtn active" data-view="rekap"><span class="ic">▦</span><span class="txt">Rekap nota</span><span class="badge-n" id="nav-belum" hidden>0</span></button>
+      <button class="navbtn" data-view="tambah"><span class="ic">＋</span><span class="txt">Tambah nota</span></button>
+      <button class="navbtn" data-view="tt"><span class="ic">✎</span><span class="txt">Buat tanda terima</span></button>
+      <button class="navbtn" data-view="riwayat"><span class="ic">◷</span><span class="txt">Riwayat TT</span></button>
+      <button class="navbtn" data-view="backup"><span class="ic">⇅</span><span class="txt">Backup</span></button>
+      <button class="navbtn" data-view="set"><span class="ic">⚙</span><span class="txt">Pengaturan</span></button>
+    </nav>
+    <div class="side-foot">Data tersimpan di browser PC ini. Ekspor backup secara berkala.</div>
+  </aside>
+
+  <main class="main">
+
+    <!-- REKAP -->
+    <section class="view active" id="view-rekap">
+      <div class="head">
+        <div><h1>Rekap nota</h1><p id="rekap-sub">Belum ada faktur tercatat</p></div>
+        <button class="btn btn-primary" data-goto="tambah">+ Tambah nota</button>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="lbl">Belum TT</div><div class="val" id="s-belum-rp">Rp 0</div>
+          <div class="bar" style="background:var(--warn-soft)"><i id="bar-belum" style="background:var(--warn);width:0%"></i></div>
+          <div class="sub" id="s-belum-ct">0 nota</div></div>
+        <div class="stat"><div class="lbl">Sudah TT</div><div class="val" id="s-sudah-rp">Rp 0</div>
+          <div class="bar" style="background:var(--ok-soft)"><i id="bar-sudah" style="background:var(--ok);width:0%"></i></div>
+          <div class="sub" id="s-sudah-ct">0 nota</div></div>
+        <div class="stat"><div class="lbl">Total</div><div class="val" id="s-total-rp">Rp 0</div>
+          <div class="bar" style="background:var(--accent-soft)"><i style="background:var(--accent);width:100%"></i></div>
+          <div class="sub" id="s-total-ct">0 nota</div></div>
+      </div>
+      <div class="toolbar">
+        <div class="search"><span class="ic">⌕</span><input id="search" placeholder="Cari faktur, supplier, atau rekening…" autocomplete="off"></div>
+        <div class="segmented" id="filter">
+          <button class="active" data-f="all">Semua</button>
+          <button data-f="belum">Belum TT</button>
+          <button data-f="sudah">Sudah TT</button>
+        </div>
+      </div>
+      <div class="list" id="rekap-list"></div>
+    </section>
+
+    <!-- TAMBAH -->
+    <section class="view" id="view-tambah">
+      <div class="head"><div><h1 id="tambah-judul">Tambah nota</h1><p id="tambah-sub">Catat faktur yang baru diserahkan sales.</p></div></div>
+      <div class="card" style="max-width:640px">
+        <div class="field mono" id="w-faktur">
+          <label>No. faktur <span class="req">*</span></label>
+          <input id="f-faktur" placeholder="INV-2026-00123" autocomplete="off">
+          <div class="err-line" id="e-faktur">Nomor faktur ini sudah ada.</div>
+        </div>
+        <div class="grid2">
+          <div class="field" id="w-tglnota"><label>Tanggal nota <span class="req">*</span></label><input id="f-tgl-nota" type="date"></div>
+          <div class="field" id="w-tglterima"><label>Tanggal terima nota <span class="req">*</span></label><input id="f-tgl-terima" type="date"></div>
+        </div>
+        <div class="field" id="w-supplier">
+          <label>Nama supplier <span class="req">*</span></label>
+          <input id="f-supplier" placeholder="CV Sumber Makmur" autocomplete="off" list="dl-supplier">
+          <datalist id="dl-supplier"></datalist>
+        </div>
+        <div class="grid2">
+          <div class="field" id="w-nominal"><label>Nominal <span class="req">*</span></label>
+            <div class="rp-wrap"><span class="rp">Rp</span><input id="f-nominal" inputmode="numeric" placeholder="0" autocomplete="off"></div></div>
+          <div class="field mono" id="w-rekening"><label>No. rekening supplier <span class="req">*</span></label>
+            <input id="f-rekening" placeholder="BCA 1234567890 a.n. …" autocomplete="off" list="dl-rek">
+            <datalist id="dl-rek"></datalist></div>
+        </div>
+        <div class="row-actions" style="margin-top:6px">
+          <button class="btn btn-primary" id="btn-save-nota">Simpan nota</button>
+          <button class="btn btn-ghost" id="btn-reset-nota">Bersihkan</button>
+          <button class="btn btn-ghost" id="btn-cancel-edit" style="display:none">Batal edit</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- BUAT TT -->
+    <section class="view" id="view-tt">
+      <div class="head"><div><h1>Buat tanda terima</h1><p>Pilih faktur yang akan dibuatkan bukti tanda terima.</p></div></div>
+
+      <div id="tt-picker">
+        <div class="selbar">
+          <div class="info"><b id="sel-count">0</b> nota dipilih · Total <b id="sel-total">Rp 0</b></div>
+          <button class="btn btn-primary btn-sm" id="btn-lanjut-tt" disabled>Lanjut →</button>
+        </div>
+        <div id="tt-warn" class="warnrow" style="display:none"></div>
+        <div class="list" id="tt-pick-list"></div>
+      </div>
+
+      <div id="tt-builder" style="display:none">
+        <div class="card no-print" style="max-width:640px;margin-bottom:20px">
+          <h2>Data tanda terima</h2>
+          <p class="hint">Nomor TT dibuat otomatis. Lengkapi identitas pemberi nota.</p>
+          <div class="grid2">
+            <div class="field mono"><label>Nomor TT</label><input id="tt-nomor" autocomplete="off"></div>
+            <div class="field"><label>Tanggal tanda terima <span class="req">*</span></label><input id="tt-tgl" type="date"></div>
+          </div>
+          <div class="field" id="w-pemberi">
+            <label>Nama pemberi nota — supplier / sales <span class="req">*</span></label>
+            <input id="tt-pemberi" placeholder="Budi Santoso (CV Sumber Makmur)" autocomplete="off">
+            <div class="err-line" id="e-pemberi">Nama pemberi nota wajib diisi.</div>
+          </div>
+          <div class="field"><label>Alamat pemberi nota</label><input id="tt-alamat" placeholder="Jl. Diponegoro No. 45, Kediri" autocomplete="off"></div>
+          <div class="row-actions" style="margin-top:6px">
+            <button class="btn btn-ghost btn-sm" id="btn-back-pick">← Ganti pilihan</button>
+            <button class="btn btn-primary btn-sm" id="btn-render-tt">Buat pratinjau</button>
+          </div>
+        </div>
+
+        <div id="tt-preview-zone" style="display:none">
+          <div class="tt-doc" id="tt-doc-live"></div>
+          <div class="print-actions">
+            <button class="btn btn-primary" id="btn-print-tt">🖨 Cetak / simpan PDF</button>
+            <button class="btn btn-ghost" id="btn-finish-tt">✓ Simpan &amp; tandai sudah TT</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIWAYAT -->
+    <section class="view" id="view-riwayat">
+      <div class="head"><div><h1>Riwayat tanda terima</h1><p>Semua TT yang pernah diterbitkan. Bisa dicetak ulang.</p></div></div>
+      <div class="list" id="riwayat-list"></div>
+    </section>
+
+    <!-- BACKUP -->
+    <section class="view" id="view-backup">
+      <div class="head"><div><h1>Backup</h1><p>Data tersimpan di browser PC ini. Ekspor rutin agar aman.</p></div></div>
+      <div class="card">
+        <div class="bkgrid">
+          <div class="bk">
+            <h3>⬇ Ekspor backup</h3>
+            <p>Unduh semua nota, riwayat TT, dan pengaturan sebagai satu file <b>.json</b>.</p>
+            <button class="btn btn-primary btn-sm" id="btn-export">Unduh file backup</button>
+          </div>
+          <div class="bk">
+            <h3>⬆ Impor backup</h3>
+            <p>Pulihkan data dari file backup. Data saat ini akan diganti.</p>
+            <input type="file" id="import-file" accept="application/json,.json" style="display:none">
+            <button class="btn btn-ghost btn-sm" id="btn-import">Pilih file backup</button>
+          </div>
+        </div>
+        <div class="warnbox">Jika kamu menghapus cache browser, memakai mode incognito, atau ganti PC — data bisa hilang. Biasakan ekspor backup tiap selesai kerja dan simpan salinannya di flashdisk atau Drive.</div>
+        <div style="margin-top:16px"><button class="btn btn-danger btn-sm" id="btn-reset-all">Hapus semua data</button></div>
+      </div>
+    </section>
+
+    <!-- PENGATURAN -->
+    <section class="view" id="view-set">
+      <div class="head"><div><h1>Pengaturan</h1><p>Identitas yang muncul di kop tanda terima.</p></div></div>
+      <div class="card" style="max-width:560px">
+        <div class="field"><label>Nama toko / usaha</label><input id="set-nama" placeholder="Toko Berkah Jaya" autocomplete="off"></div>
+        <div class="field"><label>Alamat toko</label><input id="set-alamat" placeholder="Jl. Merdeka No. 10, Kediri" autocomplete="off"></div>
+        <div class="grid2">
+          <div class="field"><label>Nama penanda tangan</label><input id="set-ttd" placeholder="Nama yang menerima nota" autocomplete="off"></div>
+          <div class="field mono"><label>Awalan nomor TT</label><input id="set-prefix" placeholder="TT" autocomplete="off"></div>
+        </div>
+        <div class="row-actions" style="margin-top:6px"><button class="btn btn-primary btn-sm" id="btn-save-set">Simpan pengaturan</button></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<div id="print-region"><div class="tt-doc" id="tt-doc-print"></div></div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h3 id="m-title">Konfirmasi</h3>
+    <p id="m-msg"></p>
+    <div class="row-actions">
+      <button class="btn btn-ghost btn-sm" id="m-cancel">Batal</button>
+      <button class="btn btn-primary btn-sm" id="m-ok">Ya, lanjut</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+const DB_KEY='notaSalesDB_v1';
+const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+
+/* ---------- state ---------- */
+let db=load(), selected=new Set(), editingId=null, lastTT=null;
+
+function blank(){ return {nota:[],tt:[],ttCounter:0,settings:{nama:'',alamat:'',ttd:'',prefix:'TT'}}; }
+function load(){
+  try{ const raw=localStorage.getItem(DB_KEY); if(raw) return migrate(JSON.parse(raw)); }catch(e){}
+  return blank();
+}
+/* FIX: migrasi dipakai saat load DAN saat impor */
+function migrate(d){
+  if(!d||typeof d!=='object') return blank();
+  if(!Array.isArray(d.nota)) d.nota=[];
+  if(!Array.isArray(d.tt)) d.tt=[];
+  if(typeof d.ttCounter!=='number'||d.ttCounter<0) d.ttCounter=0;
+  if(!d.settings||typeof d.settings!=='object') d.settings={};
+  d.settings.nama=d.settings.nama||''; d.settings.alamat=d.settings.alamat||'';
+  d.settings.ttd=d.settings.ttd||''; d.settings.prefix=d.settings.prefix||'TT';
+  d.nota.forEach(n=>{
+    if(!n.id) n.id=uid();
+    if(n.tanggal&&!n.tglNota) n.tglNota=n.tanggal;
+    if(n.tanggal&&!n.tglTerima) n.tglTerima=n.tanggal;
+    if(n.status!=='sudah') n.status='belum';
+    /* FIX: "12.500" (format Indonesia) harus jadi 12500, bukan 12.5 */
+    n.nominal=typeof n.nominal==='string'?Number(n.nominal.replace(/\D/g,''))||0:Number(n.nominal)||0;
+    if(!n.createdAt) n.createdAt=Date.now();
+  });
+  /* pastikan counter tak pernah lebih kecil dari TT yang sudah ada */
+  d.ttCounter=Math.max(d.ttCounter,d.tt.length);
+  return d;
+}
+function save(){
+  try{ localStorage.setItem(DB_KEY,JSON.stringify(db)); }
+  catch(e){ toast('Gagal menyimpan. Penyimpanan browser penuh — ekspor backup lalu hapus data lama.','err'); }
+}
+
+/* ---------- helpers ---------- */
+const rp=n=>'Rp '+(Number(n)||0).toLocaleString('id-ID');
+const digits=s=>(s==null?'':String(s)).replace(/\D/g,'');
+const fmtGroup=s=>{const d=digits(s);return d?Number(d).toLocaleString('id-ID'):'';};
+const todayISO=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};
+const BL=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+const BLL=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+function fmtDate(iso){ if(!iso||!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return '—'; const[y,m,d]=iso.split('-'); return `${d} ${BL[+m-1]} ${y}`; }
+function fmtDateLong(iso){ if(!iso||!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return '—'; const[y,m,d]=iso.split('-'); return `${+d} ${BLL[+m-1]} ${y}`; }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function initials(s){ const w=String(s||'?').replace(/^(CV|PT|UD|TB|Toko)\s+/i,'').trim().split(/\s+/); return ((w[0]||'?')[0]+(w[1]||'')[0]||'').toUpperCase().slice(0,2)||'?'; }
+
+function terbilang(n){
+  n=Math.floor(Math.abs(Number(n)||0));
+  if(n===0) return 'Nol rupiah';
+  const sat=['','satu','dua','tiga','empat','lima','enam','tujuh','delapan','sembilan','sepuluh','sebelas'];
+  const w=x=>{
+    if(x<12) return sat[x];
+    if(x<20) return w(x-10)+' belas';
+    if(x<100) return w(Math.floor(x/10))+' puluh'+(x%10?' '+sat[x%10]:'');
+    if(x<200) return 'seratus'+(x%100?' '+w(x%100):'');
+    if(x<1000) return sat[Math.floor(x/100)]+' ratus'+(x%100?' '+w(x%100):'');
+    if(x<2000) return 'seribu'+(x%1000?' '+w(x%1000):'');
+    if(x<1e6) return w(Math.floor(x/1000))+' ribu'+(x%1000?' '+w(x%1000):'');
+    if(x<1e9) return w(Math.floor(x/1e6))+' juta'+(x%1e6?' '+w(x%1e6):'');
+    if(x<1e12) return w(Math.floor(x/1e9))+' miliar'+(x%1e9?' '+w(x%1e9):'');
+    return w(Math.floor(x/1e12))+' triliun'+(x%1e12?' '+w(x%1e12):'');
+  };
+  const s=w(n).replace(/\s+/g,' ').trim();
+  return s.charAt(0).toUpperCase()+s.slice(1)+' rupiah';
+}
+
+function toast(msg,type){ const t=$('#toast'); t.textContent=msg; t.className='toast show '+(type||''); clearTimeout(t._t); t._t=setTimeout(()=>t.className='toast',2600); }
+let cbOk=null;
+function confirmBox(title,msg,cb,ok,danger){
+  $('#m-title').textContent=title; $('#m-msg').textContent=msg;
+  const b=$('#m-ok'); b.textContent=ok||'Ya, lanjut';
+  b.className='btn btn-sm '+(danger?'btn-danger':'btn-primary');
+  cbOk=cb; $('#overlay').classList.add('show'); b.focus();
+}
+$('#m-cancel').onclick=()=>{$('#overlay').classList.remove('show');cbOk=null;};
+$('#m-ok').onclick=()=>{$('#overlay').classList.remove('show'); const f=cbOk; cbOk=null; if(f)f();};
+$('#overlay').onclick=e=>{ if(e.target===$('#overlay')) $('#m-cancel').click(); };
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&$('#overlay').classList.contains('show')) $('#m-cancel').click(); });
+
+/* ---------- nav ---------- */
+function go(v){
+  $$('.navbtn').forEach(x=>x.classList.toggle('active',x.dataset.view===v));
+  $$('.view').forEach(s=>s.classList.toggle('active',s.id==='view-'+v));
+  if(v==='tt') resetTTFlow();
+  if(v==='rekap') renderRekap();
+  if(v==='riwayat') renderRiwayat();
+  if(v==='tambah') $('#f-faktur').focus();
+  window.scrollTo(0,0);
+}
+$$('.navbtn').forEach(b=>b.onclick=()=>go(b.dataset.view));
+$$('[data-goto]').forEach(b=>b.onclick=()=>go(b.dataset.goto));
+
+/* ---------- rupiah input, caret aman ---------- */
+(function(el){
+  el.addEventListener('input',()=>{
+    const before=el.value.length, caret=el.selectionStart;
+    el.value=fmtGroup(el.value);
+    const pos=Math.max(0,caret+(el.value.length-before));
+    try{ el.setSelectionRange(pos,pos); }catch(e){}
+  });
+})($('#f-nominal'));
+
+/* ---------- tambah / edit nota ---------- */
+function clearErr(){ $$('.field').forEach(f=>f.classList.remove('bad')); }
+$('#f-tgl-nota').value=todayISO(); $('#f-tgl-terima').value=todayISO();
+
+function resetForm(){
+  ['f-faktur','f-supplier','f-nominal','f-rekening'].forEach(i=>$('#'+i).value='');
+  $('#f-tgl-nota').value=todayISO(); $('#f-tgl-terima').value=todayISO();
+  editingId=null; clearErr();
+  $('#tambah-judul').textContent='Tambah nota';
+  $('#tambah-sub').textContent='Catat faktur yang baru diserahkan sales.';
+  $('#btn-save-nota').textContent='Simpan nota';
+  $('#btn-cancel-edit').style.display='none';
+  $('#f-faktur').focus();
+}
+$('#btn-reset-nota').onclick=resetForm;
+$('#btn-cancel-edit').onclick=()=>{resetForm();go('rekap');};
+
+function startEdit(id){
+  const n=db.nota.find(x=>x.id===id); if(!n) return;
+  editingId=id;
+  $('#f-faktur').value=n.faktur; $('#f-supplier').value=n.supplier;
+  $('#f-nominal').value=fmtGroup(n.nominal); $('#f-rekening').value=n.rekening||'';
+  $('#f-tgl-nota').value=n.tglNota||''; $('#f-tgl-terima').value=n.tglTerima||'';
+  $('#tambah-judul').textContent='Edit nota';
+  $('#tambah-sub').textContent=n.status==='sudah'?'Nota ini sudah punya tanda terima. Perubahan tidak mengubah TT yang sudah dicetak.':'Perbarui data faktur.';
+  $('#btn-save-nota').textContent='Perbarui nota';
+  $('#btn-cancel-edit').style.display='inline-flex';
+  clearErr(); go('tambah');
+}
+
+$('#btn-save-nota').onclick=()=>{
+  clearErr();
+  const faktur=$('#f-faktur').value.trim(), supplier=$('#f-supplier').value.trim();
+  const nominal=Number(digits($('#f-nominal').value));
+  const tglNota=$('#f-tgl-nota').value, tglTerima=$('#f-tgl-terima').value;
+  const rekening=$('#f-rekening').value.trim();
+
+  let bad=false;
+  const mark=(w)=>{ $('#'+w).classList.add('bad'); bad=true; };
+  if(!faktur) mark('w-faktur');
+  if(!supplier) mark('w-supplier');
+  if(!nominal||nominal<=0) mark('w-nominal');
+  if(!rekening) mark('w-rekening');
+  if(!tglNota) mark('w-tglnota');
+  if(!tglTerima) mark('w-tglterima');
+  if(bad){ toast('Lengkapi kolom yang ditandai merah.','err'); return; }
+
+  /* FIX: cegah nomor faktur ganda */
+  const dup=db.nota.find(n=>n.faktur.toLowerCase()===faktur.toLowerCase()&&n.id!==editingId);
+  if(dup){ $('#w-faktur').classList.add('bad'); $('#e-faktur').textContent=`Faktur ${dup.faktur} sudah tercatat (${dup.supplier}).`; toast('Nomor faktur sudah ada.','err'); return; }
+
+  if(tglTerima<tglNota){
+    confirmBox('Tanggal terima lebih awal','Tanggal terima nota lebih awal dari tanggal nota. Tetap simpan?',()=>doSave(),'Tetap simpan');
+    return;
+  }
+  doSave();
+
+  function doSave(){
+    if(editingId){
+      const n=db.nota.find(x=>x.id===editingId);
+      Object.assign(n,{faktur,supplier,nominal,tglNota,tglTerima,rekening});
+      toast('Nota diperbarui.','ok');
+    }else{
+      db.nota.push({id:uid(),faktur,supplier,nominal,tglNota,tglTerima,rekening,status:'belum',ttId:null,createdAt:Date.now()});
+      toast('Nota tersimpan.','ok');
+    }
+    save(); const wasEdit=!!editingId; resetForm(); refreshDatalists(); renderRekap();
+    if(wasEdit) go('rekap');
+  }
+};
+
+function refreshDatalists(){
+  const sup=[...new Set(db.nota.map(n=>n.supplier))].sort();
+  const rek=[...new Set(db.nota.map(n=>n.rekening).filter(Boolean))].sort();
+  $('#dl-supplier').innerHTML=sup.map(s=>`<option value="${esc(s)}">`).join('');
+  $('#dl-rek').innerHTML=rek.map(s=>`<option value="${esc(s)}">`).join('');
+}
+
+/* ---------- rekap ---------- */
+let curFilter='all';
+$$('#filter button').forEach(b=>b.onclick=()=>{
+  $$('#filter button').forEach(x=>x.classList.remove('active')); b.classList.add('active');
+  curFilter=b.dataset.f; renderRekap();
+});
+$('#search').addEventListener('input',renderRekap);
+
+function renderRekap(){
+  const q=$('#search').value.trim().toLowerCase();
+  let bR=0,bC=0,sR=0,sC=0;
+  db.nota.forEach(n=>{ if(n.status==='belum'){bR+=n.nominal;bC++;} else {sR+=n.nominal;sC++;} });
+  const tot=bR+sR;
+  $('#s-belum-rp').textContent=rp(bR); $('#s-belum-ct').textContent=bC+' nota';
+  $('#s-sudah-rp').textContent=rp(sR); $('#s-sudah-ct').textContent=sC+' nota';
+  $('#s-total-rp').textContent=rp(tot); $('#s-total-ct').textContent=(bC+sC)+' nota';
+  $('#bar-belum').style.width=tot?Math.round(bR/tot*100)+'%':'0%';
+  $('#bar-sudah').style.width=tot?Math.round(sR/tot*100)+'%':'0%';
+  $('#rekap-sub').textContent=db.nota.length?`${db.nota.length} faktur tercatat`:'Belum ada faktur tercatat';
+  const nb=$('#nav-belum'); nb.hidden=bC===0; nb.textContent=bC;
+
+  let rows=db.nota.slice().sort((a,b)=>b.createdAt-a.createdAt);
+  if(curFilter!=='all') rows=rows.filter(n=>n.status===curFilter);
+  if(q) rows=rows.filter(n=>(n.faktur+' '+n.supplier+' '+(n.rekening||'')).toLowerCase().includes(q));
+
+  const el=$('#rekap-list');
+  if(!rows.length){
+    el.innerHTML=`<div class="empty"><div class="big">▦</div><p>${db.nota.length?'Tidak ada nota yang cocok dengan pencarian.':'Belum ada nota. Mulai dari tombol Tambah nota.'}</p></div>`;
+    return;
+  }
+  el.innerHTML=rows.map(n=>`
+    <div class="nrow">
+      <div class="av ${n.status}">${esc(initials(n.supplier))}</div>
+      <div class="body">
+        <div class="sup">${esc(n.supplier)}</div>
+        <div class="meta"><span class="fk">${esc(n.faktur)}</span> · nota ${fmtDate(n.tglNota)} · terima ${fmtDate(n.tglTerima)}${n.ttId?` · ${esc(n.ttId)}`:''}</div>
+      </div>
+      <div class="right">
+        <div class="amt">${rp(n.nominal)}</div>
+        <span class="pill ${n.status}">${n.status==='belum'?'Belum TT':'Sudah TT'}</span>
+      </div>
+      <div class="acts">
+        <button class="iconbtn" title="Edit" aria-label="Edit nota" data-edit="${n.id}">✎</button>
+        <button class="iconbtn del" title="Hapus" aria-label="Hapus nota" data-del="${n.id}">🗑</button>
+      </div>
+    </div>`).join('');
+
+  el.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>startEdit(b.dataset.edit));
+  el.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{
+    const n=db.nota.find(x=>x.id===b.dataset.del); if(!n) return;
+    const extra=n.status==='sudah'?' Nota ini sudah masuk tanda terima '+n.ttId+'.':'';
+    confirmBox('Hapus nota?',`Faktur ${n.faktur} (${rp(n.nominal)}) akan dihapus permanen.${extra}`,()=>{
+      db.nota=db.nota.filter(x=>x.id!==n.id);
+      selected.delete(n.id);                                  /* FIX: bersihkan pilihan */
+      db.tt.forEach(t=>{ t.notaIds=t.notaIds.filter(i=>i!==n.id); });
+      save(); refreshDatalists(); renderRekap();
+      if(editingId===n.id) resetForm();
+      toast('Nota dihapus.');
+    },'Hapus',true);
+  });
+}
+
+/* ---------- picker TT ---------- */
+function resetTTFlow(){
+  selected.clear();
+  $('#tt-picker').style.display='block';
+  $('#tt-builder').style.display='none';
+  $('#tt-preview-zone').style.display='none';
+  $('#tt-pemberi').value=''; $('#tt-alamat').value=''; clearErr();
+  lastTT=null;                                               /* FIX: cegah cetak sisa TT lama */
+  renderPicker();
+}
+function renderPicker(){
+  const rows=db.nota.filter(n=>n.status==='belum').sort((a,b)=>b.createdAt-a.createdAt);
+  const el=$('#tt-pick-list');
+  if(!rows.length){
+    el.innerHTML=`<div class="empty"><div class="big">✓</div><p>Semua nota sudah punya tanda terima.</p></div>`;
+    updateSelBar(); return;
+  }
+  el.innerHTML=rows.map(n=>`
+    <div class="nrow prow ${selected.has(n.id)?'on':''}" data-pick="${n.id}" role="checkbox" tabindex="0" aria-checked="${selected.has(n.id)}">
+      <div class="cbx">${selected.has(n.id)?'✓':''}</div>
+      <div class="av belum">${esc(initials(n.supplier))}</div>
+      <div class="body">
+        <div class="sup">${esc(n.supplier)}</div>
+        <div class="meta"><span class="fk">${esc(n.faktur)}</span> · nota ${fmtDate(n.tglNota)} · terima ${fmtDate(n.tglTerima)}</div>
+      </div>
+      <div class="right"><div class="amt">${rp(n.nominal)}</div></div>
+    </div>`).join('');
+  el.querySelectorAll('[data-pick]').forEach(r=>{
+    const toggle=()=>{ const id=r.dataset.pick; selected.has(id)?selected.delete(id):selected.add(id); renderPicker(); };
+    r.onclick=toggle;
+    r.onkeydown=e=>{ if(e.key===' '||e.key==='Enter'){e.preventDefault();toggle();} };
+  });
+  updateSelBar();
+}
+function updateSelBar(){
+  const chosen=db.nota.filter(n=>selected.has(n.id));
+  const total=chosen.reduce((s,n)=>s+n.nominal,0);
+  $('#sel-count').textContent=chosen.length;
+  $('#sel-total').textContent=rp(total);
+  $('#btn-lanjut-tt').disabled=!chosen.length;
+  const sup=[...new Set(chosen.map(n=>n.supplier))];
+  const w=$('#tt-warn');
+  if(sup.length>1){ w.style.display='block'; w.textContent=`Kamu memilih nota dari ${sup.length} supplier berbeda. Biasanya satu TT untuk satu supplier — pastikan ini memang disengaja.`; }
+  else w.style.display='none';
+}
+
+/* FIX: nomor TT hanya dipesan, tidak mengubah counter sampai disimpan */
+function nextTTNo(){
+  const prefix=(db.settings.prefix||'TT').trim()||'TT';
+  return `${prefix}/${new Date().getFullYear()}/${String((db.ttCounter||0)+1).padStart(4,'0')}`;
+}
+$('#btn-lanjut-tt').onclick=()=>{
+  $('#tt-nomor').value=nextTTNo();
+  $('#tt-tgl').value=todayISO();
+  $('#tt-pemberi').value=''; $('#tt-alamat').value=''; clearErr();
+  $('#tt-picker').style.display='none';
+  $('#tt-builder').style.display='block';
+  $('#tt-preview-zone').style.display='none';
+  $('#tt-pemberi').focus();
+};
+$('#btn-back-pick').onclick=()=>{
+  $('#tt-picker').style.display='block';
+  $('#tt-builder').style.display='none';
+  $('#tt-preview-zone').style.display='none';
+  lastTT=null; renderPicker();
+};
+
+/* ---------- dokumen TT ---------- */
+function buildTTHtml(d){
+  const total=d.items.reduce((s,i)=>s+i.nominal,0);
+  const reks=[...new Set(d.items.map(i=>`${i.supplier} — ${i.rekening||'(tidak dicatat)'}`))];
+  const nama=d.tokoNama||'Nama toko belum diatur';
+  const ttd=d.tokoTtd||nama;
+  return `
+    <div class="tt-head">
+      <div><div class="tt-toko">${esc(nama)}${d.tokoAlamat?`<div class="tag">${esc(d.tokoAlamat)}</div>`:''}</div></div>
+      <div class="tt-title"><div class="t">TANDA TERIMA</div><div class="n">${esc(d.nomor)}</div></div>
+    </div>
+    <div class="tt-lead">Telah diterima nota / faktur dari:</div>
+    <table class="tt-info">
+      <tr><td class="k">Nama pemberi nota</td><td class="v">${esc(d.pemberi)}</td></tr>
+      ${d.alamat?`<tr><td class="k">Alamat</td><td class="v" style="font-weight:400">${esc(d.alamat)}</td></tr>`:''}
+      <tr><td class="k">Tanggal tanda terima</td><td class="v">${fmtDateLong(d.tgl)}</td></tr>
+      <tr><td class="k">Jumlah faktur</td><td class="v">${d.items.length} lembar</td></tr>
+    </table>
+    <div class="tt-lead">Dengan rincian sebagai berikut:</div>
+    <table class="tt-tbl">
+      <thead><tr>
+        <th style="width:28px">No</th><th style="width:23%">No. faktur</th>
+        <th style="width:15%">Tgl nota</th><th style="width:15%">Tgl terima</th>
+        <th>No. rekening</th><th style="width:20%;text-align:right">Nominal</th>
+      </tr></thead>
+      <tbody>
+        ${d.items.map((i,x)=>`<tr>
+          <td>${x+1}</td><td class="f">${esc(i.faktur)}</td>
+          <td class="d">${fmtDate(i.tglNota)}</td><td class="d">${fmtDate(i.tglTerima)}</td>
+          <td class="rek">${esc(i.rekening)||'—'}</td><td class="n">${rp(i.nominal)}</td>
+        </tr>`).join('')}
+        <tr class="total"><td colspan="5">TOTAL</td><td class="n">${rp(total)}</td></tr>
+      </tbody>
+    </table>
+    <div class="terbilang"><span class="lb">Terbilang</span><b>${terbilang(total)}</b></div>
+    <div class="rek-block">
+      <div class="rek-h">Rekening tujuan pembayaran</div>
+      ${reks.map(r=>`<div class="rek-r">${esc(r)}</div>`).join('')}
+    </div>
+    <div class="tt-sign">
+      <div class="sign-box"><div class="role">Yang menyerahkan nota,</div><div class="name">${esc(d.pemberi)}</div><div class="cap">Supplier / Sales</div></div>
+      <div class="sign-box"><div class="role">Yang menerima,</div><div class="name">${esc(ttd)}</div><div class="cap">${esc(nama)}</div></div>
+    </div>
+    <div class="stamp-mark">DITERIMA</div>
+    <div class="tt-note">Dokumen ini adalah bukti penyerahan faktur untuk diproses — bukan bukti pelunasan pembayaran.</div>`;
+}
+function draftFromForm(){
+  const items=db.nota.filter(n=>selected.has(n.id))
+    .sort((a,b)=>(a.tglNota||'').localeCompare(b.tglNota||''))
+    .map(n=>({notaId:n.id,faktur:n.faktur,supplier:n.supplier,nominal:n.nominal,tglNota:n.tglNota,tglTerima:n.tglTerima,rekening:n.rekening}));
+  return {
+    nomor:$('#tt-nomor').value.trim()||nextTTNo(),
+    tgl:$('#tt-tgl').value||todayISO(),
+    pemberi:$('#tt-pemberi').value.trim(),
+    alamat:$('#tt-alamat').value.trim(),
+    items,
+    tokoNama:db.settings.nama, tokoAlamat:db.settings.alamat, tokoTtd:db.settings.ttd
+  };
+}
+function validTT(){
+  clearErr();
+  if(!$('#tt-pemberi').value.trim()){ $('#w-pemberi').classList.add('bad'); toast('Isi nama pemberi nota dulu.','err'); return false; }
+  if(!selected.size){ toast('Belum ada nota yang dipilih.','err'); return false; }
+  return true;
+}
+$('#btn-render-tt').onclick=()=>{
+  if(!validTT()) return;
+  lastTT=draftFromForm();
+  $('#tt-doc-live').innerHTML=buildTTHtml(lastTT);
+  $('#tt-preview-zone').style.display='block';
+  $('#tt-preview-zone').scrollIntoView({behavior:'smooth',block:'start'});
+};
+function printDoc(d){
+  lastTT=d;
+  $('#tt-doc-print').innerHTML=buildTTHtml(d);
+  window.print();
+}
+$('#btn-print-tt').onclick=()=>{ if(!validTT()) return; printDoc(draftFromForm()); };
+
+/* FIX: Ctrl+P tidak lagi mencetak halaman kosong */
+window.addEventListener('beforeprint',()=>{
+  const box=$('#tt-doc-print');
+  if(lastTT) box.innerHTML=buildTTHtml(lastTT);
+  else if(!box.innerHTML.trim())
+    box.innerHTML='<div style="padding:40px;text-align:center;font-size:13px">Tidak ada tanda terima yang sedang dibuka.<br>Buka menu “Buat tanda terima” lalu tekan Cetak.</div>';
+});
+
+$('#btn-finish-tt').onclick=()=>{
+  if(!validTT()) return;
+  const d=draftFromForm();
+  confirmBox('Simpan tanda terima?',`${d.items.length} nota akan ditandai Sudah TT dengan nomor ${d.nomor}.`,()=>{
+    db.ttCounter=(db.ttCounter||0)+1;                        /* counter naik hanya di sini */
+    const rec={id:uid(),nomor:d.nomor,tgl:d.tgl,pemberi:d.pemberi,alamat:d.alamat,
+      notaIds:d.items.map(i=>i.notaId),total:d.items.reduce((s,i)=>s+i.nominal,0),createdAt:Date.now()};
+    db.tt.push(rec);
+    db.nota.forEach(n=>{ if(rec.notaIds.includes(n.id)){ n.status='sudah'; n.ttId=rec.nomor; } });
+    save();
+    toast(`Tanda terima ${rec.nomor} tersimpan.`,'ok');
+    resetTTFlow(); renderRekap();
+  },'Simpan');
+};
+
+/* ---------- riwayat ---------- */
+function ttToDoc(t){
+  const items=t.notaIds.map(id=>db.nota.find(n=>n.id===id)).filter(Boolean)
+    .map(n=>({notaId:n.id,faktur:n.faktur,supplier:n.supplier,nominal:n.nominal,tglNota:n.tglNota,tglTerima:n.tglTerima,rekening:n.rekening}));
+  return {nomor:t.nomor,tgl:t.tgl,pemberi:t.pemberi,alamat:t.alamat,items,
+    tokoNama:db.settings.nama,tokoAlamat:db.settings.alamat,tokoTtd:db.settings.ttd};
+}
+function renderRiwayat(){
+  const el=$('#riwayat-list');
+  const rows=db.tt.slice().sort((a,b)=>b.createdAt-a.createdAt);
+  if(!rows.length){ el.innerHTML=`<div class="empty"><div class="big">◷</div><p>Belum ada tanda terima yang diterbitkan.</p></div>`; return; }
+  el.innerHTML=rows.map(t=>{
+    const hilang=t.notaIds.filter(id=>!db.nota.some(n=>n.id===id)).length;
+    return `<div class="trow">
+      <div class="no">${esc(t.nomor)}</div>
+      <div class="body">
+        <div class="sup">${esc(t.pemberi)}</div>
+        <div class="meta">${fmtDate(t.tgl)} · ${t.notaIds.length} nota${hilang?` · ${hilang} nota terhapus`:''}</div>
+      </div>
+      <div class="right"><div class="amt">${rp(t.total)}</div></div>
+      <div class="acts" style="opacity:1">
+        <button class="iconbtn" title="Cetak ulang" aria-label="Cetak ulang" data-print="${t.id}">🖨</button>
+        <button class="iconbtn del" title="Batalkan TT" aria-label="Batalkan tanda terima" data-void="${t.id}">↺</button>
+      </div>
+    </div>`;
+  }).join('');
+  el.querySelectorAll('[data-print]').forEach(b=>b.onclick=()=>{
+    const t=db.tt.find(x=>x.id===b.dataset.print);
+    if(!t.notaIds.some(id=>db.nota.some(n=>n.id===id))){ toast('Semua nota di TT ini sudah dihapus.','err'); return; }
+    printDoc(ttToDoc(t));
+  });
+  el.querySelectorAll('[data-void]').forEach(b=>b.onclick=()=>{
+    const t=db.tt.find(x=>x.id===b.dataset.void);
+    confirmBox('Batalkan tanda terima?',`TT ${t.nomor} dihapus dari riwayat dan ${t.notaIds.length} nota dikembalikan ke status Belum TT. Nomor TT tidak dipakai ulang.`,()=>{
+      db.nota.forEach(n=>{ if(t.notaIds.includes(n.id)){ n.status='belum'; n.ttId=null; } });
+      db.tt=db.tt.filter(x=>x.id!==t.id);
+      save(); renderRiwayat(); renderRekap(); toast('Tanda terima dibatalkan.');
+    },'Batalkan',true);
+  });
+}
+
+/* ---------- backup ---------- */
+$('#btn-export').onclick=()=>{
+  const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob), a=document.createElement('a');
+  a.href=url; a.download=`backup-nota-sales-${todayISO()}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);            /* FIX: revoke setelah unduh */
+  toast('Backup diunduh.','ok');
+};
+$('#btn-import').onclick=()=>$('#import-file').click();
+$('#import-file').onchange=e=>{
+  const file=e.target.files[0]; if(!file) return;
+  const r=new FileReader();
+  r.onload=()=>{
+    let data;
+    try{ data=JSON.parse(r.result); }catch(err){ toast('File bukan JSON yang valid.','err'); e.target.value=''; return; }
+    if(!data||!Array.isArray(data.nota)){ toast('File ini bukan backup Nota Sales.','err'); e.target.value=''; return; }
+    confirmBox('Impor backup?',`File berisi ${data.nota.length} nota dan ${Array.isArray(data.tt)?data.tt.length:0} tanda terima. Data saat ini akan diganti.`,()=>{
+      db=migrate(data);                                       /* FIX: impor lewat migrate */
+      save(); selected.clear(); editingId=null; lastTT=null;
+      syncSettings(); refreshDatalists(); renderRekap(); renderRiwayat();
+      toast('Data dipulihkan.','ok'); go('rekap');
+    },'Ya, impor');
+    e.target.value='';
+  };
+  r.onerror=()=>{ toast('Gagal membaca file.','err'); e.target.value=''; };
+  r.readAsText(file);
+};
+$('#btn-reset-all').onclick=()=>{
+  confirmBox('Hapus semua data?','Seluruh nota, riwayat TT, dan pengaturan akan dihapus permanen. Pastikan kamu sudah mengunduh backup.',()=>{
+    db=blank(); save(); selected.clear(); editingId=null; lastTT=null;
+    syncSettings(); refreshDatalists(); renderRekap(); renderRiwayat();
+    toast('Semua data dihapus.'); go('rekap');
+  },'Hapus semua',true);
+};
+
+/* ---------- pengaturan ---------- */
+function syncSettings(){
+  $('#set-nama').value=db.settings.nama||''; $('#set-alamat').value=db.settings.alamat||'';
+  $('#set-ttd').value=db.settings.ttd||''; $('#set-prefix').value=db.settings.prefix||'TT';
+  $('#side-toko').textContent=db.settings.nama||'Belum diatur';
+}
+$('#btn-save-set').onclick=()=>{
+  db.settings.nama=$('#set-nama').value.trim();
+  db.settings.alamat=$('#set-alamat').value.trim();
+  db.settings.ttd=$('#set-ttd').value.trim();
+  db.settings.prefix=$('#set-prefix').value.trim().replace(/[\\/]/g,'')||'TT';
+  save(); syncSettings(); toast('Pengaturan disimpan.','ok');
+};
+
+/* ---------- init ---------- */
+syncSettings(); refreshDatalists(); renderRekap(); renderRiwayat();
+if(!db.settings.nama && !db.nota.length) go('set');
+</script>
+</body>
+</html>
