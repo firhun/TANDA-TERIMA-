@@ -179,6 +179,27 @@ table.tt-tbl tr.total td{background:#EDEDED;font-weight:700;font-size:12.5px}
 .bk p{font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.5}
 .warnbox{background:var(--warn-soft);border-radius:12px;padding:13px 16px;font-size:12.5px;color:var(--warn-ink);margin-top:16px;line-height:1.55}
 
+/* Lock screen */
+#lock{position:fixed;inset:0;background:var(--bg);z-index:200;display:none;align-items:center;justify-content:center;padding:20px}
+#lock.show{display:flex}
+.lockcard{background:var(--card);border-radius:16px;padding:30px 32px;max-width:380px;width:100%;text-align:center}
+.lockcard .mark{width:44px;height:44px;border-radius:13px;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:19px;margin:0 auto 14px}
+.lockcard h2{font-size:17px;font-weight:600;margin-bottom:4px}
+.lockcard p{font-size:12.5px;color:var(--muted);margin-bottom:18px;line-height:1.55}
+.lockcard input{width:100%;padding:11px 13px;border:1px solid var(--line2);border-radius:10px;font-size:14px;text-align:center;letter-spacing:2px}
+.lockcard input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.lockcard .btn{width:100%;justify-content:center;margin-top:11px}
+.lockmsg{font-size:12.5px;color:var(--danger-ink);background:var(--danger-soft);border-radius:9px;padding:8px 11px;margin-top:12px;display:none}
+.lockmsg.show{display:block}
+.lockfoot{font-size:11px;color:var(--faint);margin-top:16px;line-height:1.5}
+.secrow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.secrow:last-child{border-bottom:none}
+.secrow .t{font-size:13px;font-weight:500}
+.secrow .d{font-size:11.5px;color:var(--muted);margin-top:1px;line-height:1.5}
+.dot-on{width:7px;height:7px;border-radius:50%;background:var(--ok);display:inline-block;margin-right:6px}
+.dot-off{width:7px;height:7px;border-radius:50%;background:var(--faint);display:inline-block;margin-right:6px}
+select.sel{padding:7px 10px;border:1px solid var(--line2);border-radius:9px;background:var(--card);font-size:12.5px}
+
 /* Toast + modal */
 .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--ink);color:#fff;padding:11px 18px;border-radius:20px;font-size:13px;font-weight:500;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:100;max-width:90vw;text-align:center}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -196,7 +217,9 @@ table.tt-tbl tr.total td{background:#EDEDED;font-weight:700;font-size:12.5px}
 @keyframes fade{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}}
 
-@media (max-width:860px){
+/* FIX: 'screen' wajib. Tanpa itu, halaman A4 (~794px) dianggap layar sempit
+   saat mencetak, dan kolom tanda tangan menumpuk ke bawah. */
+@media screen and (max-width:860px){
   .app{flex-direction:column}
   .side{width:100%;height:auto;position:static;flex-direction:row;align-items:center;overflow-x:auto;border-right:none;border-bottom:1px solid var(--line)}
   .brand{padding:12px 14px;flex-shrink:0}.brand .toko{display:none}
@@ -235,6 +258,10 @@ table.tt-tbl tr.total td{background:#EDEDED;font-weight:700;font-size:12.5px}
   .rek-block{border:1.2px solid #000 !important}
   .rek-r{font-size:9.5pt}
   .sign-box .name{border-top:1.5px solid #000 !important}
+  /* tanda tangan selalu berdampingan di kertas */
+  .tt-sign{display:flex !important;flex-direction:row !important;justify-content:space-between !important;align-items:flex-start !important;gap:30px !important;margin-top:20px}
+  .sign-box{width:auto !important;flex:1 1 0;max-width:46%;text-align:center}
+  .sign-box .role{margin-bottom:70px}
   .stamp-mark{border:2.5px solid #000 !important;opacity:.6}
   .tt-note{border-top:1px dashed #666 !important;font-size:8pt}
   table.tt-tbl thead{display:table-header-group}
@@ -244,6 +271,21 @@ table.tt-tbl tr.total td{background:#EDEDED;font-weight:700;font-size:12.5px}
 </style>
 </head>
 <body>
+
+<div id="lock">
+  <div class="lockcard">
+    <div class="mark" id="lock-mark">🔒</div>
+    <h2 id="lock-title">Aplikasi terkunci</h2>
+    <p id="lock-sub">Masukkan sandi untuk membuka data nota.</p>
+    <input type="password" id="lock-pw" placeholder="Sandi" autocomplete="current-password" autofocus>
+    <input type="password" id="lock-pw2" placeholder="Ulangi sandi" autocomplete="new-password" style="margin-top:9px;display:none">
+    <button class="btn btn-primary" id="lock-go">Buka</button>
+    <button class="btn btn-ghost" id="lock-skip" style="display:none">Lanjut tanpa sandi</button>
+    <div class="lockmsg" id="lock-msg"></div>
+    <div class="lockfoot" id="lock-foot">Sandi tidak dikirim ke mana pun dan tidak bisa dipulihkan.</div>
+  </div>
+</div>
+
 <div class="app">
   <aside class="side">
     <div class="brand">
@@ -380,8 +422,11 @@ table.tt-tbl tr.total td{background:#EDEDED;font-weight:700;font-size:12.5px}
         <div class="bkgrid">
           <div class="bk">
             <h3>⬇ Ekspor backup</h3>
-            <p>Unduh semua nota, riwayat TT, dan pengaturan sebagai satu file <b>.json</b>.</p>
-            <button class="btn btn-primary btn-sm" id="btn-export">Unduh file backup</button>
+            <p id="bk-desc">Unduh semua nota, riwayat TT, dan pengaturan sebagai satu file <b>.json</b>.</p>
+            <div class="row-actions">
+              <button class="btn btn-primary btn-sm" id="btn-export-enc" style="display:none">🔒 Backup terkunci</button>
+              <button class="btn btn-ghost btn-sm" id="btn-export">Backup biasa</button>
+            </div>
           </div>
           <div class="bk">
             <h3>⬆ Impor backup</h3>
@@ -407,6 +452,46 @@ table.tt-tbl tr.total td{background:#EDEDED;font-weight:700;font-size:12.5px}
         </div>
         <div class="row-actions" style="margin-top:6px"><button class="btn btn-primary btn-sm" id="btn-save-set">Simpan pengaturan</button></div>
       </div>
+
+      <div class="card" style="max-width:560px;margin-top:14px">
+        <h2>Keamanan</h2>
+        <p class="hint">Melindungi data dari orang yang memakai PC ini.</p>
+
+        <div class="secrow">
+          <div>
+            <div class="t"><span id="sec-dot" class="dot-off"></span>Sandi aplikasi</div>
+            <div class="d" id="sec-desc">Belum aktif. Siapa pun yang membuka browser ini bisa melihat semua nota.</div>
+          </div>
+          <div class="row-actions">
+            <button class="btn btn-primary btn-sm" id="btn-set-pw">Aktifkan</button>
+            <button class="btn btn-ghost btn-sm" id="btn-chg-pw" style="display:none">Ganti</button>
+            <button class="btn btn-danger btn-sm" id="btn-del-pw" style="display:none">Matikan</button>
+          </div>
+        </div>
+
+        <div class="secrow" id="row-autolock" style="display:none">
+          <div>
+            <div class="t">Kunci otomatis</div>
+            <div class="d">Mengunci sendiri kalau PC ditinggal tanpa aktivitas.</div>
+          </div>
+          <select class="sel" id="sec-idle">
+            <option value="0">Tidak pernah</option>
+            <option value="5">5 menit</option>
+            <option value="10">10 menit</option>
+            <option value="30">30 menit</option>
+          </select>
+        </div>
+
+        <div class="secrow" id="row-lock-now" style="display:none">
+          <div>
+            <div class="t">Kunci sekarang</div>
+            <div class="d">Tutup data tanpa menutup browser.</div>
+          </div>
+          <button class="btn btn-ghost btn-sm" id="btn-lock-now">🔒 Kunci</button>
+        </div>
+
+        <div class="warnbox" style="margin-top:16px">Sandi tidak disimpan di mana pun — yang tersimpan hanya sidik acaknya. Kalau kamu lupa sandi, data tidak bisa dipulihkan oleh siapa pun, termasuk aku. Simpan sandinya di tempat aman, dan tetap ekspor backup.</div>
+      </div>
     </section>
 
   </main>
@@ -428,15 +513,78 @@ table.tt-tbl tr.total td{background:#EDEDED;font-weight:700;font-size:12.5px}
 
 <script>
 "use strict";
-const DB_KEY='notaSalesDB_v1';
+const DB_KEY='notaSalesDB_v1';       /* data polos (tanpa sandi) */
+const VAULT_KEY='notaSalesVault_v1'; /* data terenkripsi */
+const GUARD_KEY='notaSalesGuard_v1'; /* penghitung salah sandi */
+const ITER=310000;
 const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 
 /* ---------- state ---------- */
-let db=load(), selected=new Set(), editingId=null, lastTT=null;
+let db=blank(), selected=new Set(), editingId=null, lastTT=null;
+let cryptoKey=null;      /* kunci AES di memori; hilang saat tab ditutup */
+let idleTimer=null;
 
-function blank(){ return {nota:[],tt:[],ttCounter:0,settings:{nama:'',alamat:'',ttd:'',prefix:'TT'}}; }
-function load(){
+function blank(){ return {nota:[],tt:[],ttCounter:0,settings:{nama:'',alamat:'',ttd:'',prefix:'TT',idleMin:10}}; }
+
+/* ===================== KRIPTOGRAFI =====================
+   AES-GCM 256-bit. Kunci diturunkan dari sandi lewat PBKDF2-SHA256
+   310.000 iterasi (anjuran OWASP). Sandi tidak pernah disimpan. */
+const TE=new TextEncoder(), TD=new TextDecoder();
+const hasCrypto=()=>!!(window.crypto&&window.crypto.subtle);
+const b64=u8=>btoa(String.fromCharCode(...new Uint8Array(u8)));
+const unb64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+
+async function deriveKey(pw,salt){
+  const base=await crypto.subtle.importKey('raw',TE.encode(pw),'PBKDF2',false,['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:ITER,hash:'SHA-256'},
+    base,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
+}
+async function sealObj(obj,key,salt){
+  const iv=crypto.getRandomValues(new Uint8Array(12));
+  const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,TE.encode(JSON.stringify(obj)));
+  return {v:1,enc:true,alg:'AES-GCM',kdf:'PBKDF2-SHA256',iter:ITER,salt:b64(salt),iv:b64(iv),ct:b64(ct)};
+}
+async function openObj(box,key){
+  const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:unb64(box.iv)},key,unb64(box.ct));
+  return JSON.parse(TD.decode(pt));
+}
+
+/* ---------- brankas ---------- */
+const getVault=()=>{ try{ return JSON.parse(localStorage.getItem(VAULT_KEY)||'null'); }catch(e){ return null; } };
+const hasVault=()=>!!getVault();
+
+/* ---------- pembatas percobaan salah ---------- */
+function guard(){ try{ return JSON.parse(localStorage.getItem(GUARD_KEY)||'{"fails":0,"until":0}'); }catch(e){ return {fails:0,until:0}; } }
+function setGuard(g){ try{ localStorage.setItem(GUARD_KEY,JSON.stringify(g)); }catch(e){} }
+function lockoutLeft(){ const g=guard(); return Math.max(0,Math.ceil((g.until-Date.now())/1000)); }
+function noteFail(){
+  const g=guard(); g.fails++;
+  if(g.fails>=5) g.until=Date.now()+Math.min(300,Math.pow(2,g.fails-4)*15)*1000;
+  setGuard(g); return g;
+}
+const clearFails=()=>setGuard({fails:0,until:0});
+
+/* ===================== SIMPAN / MUAT ===================== */
+let saveChain=Promise.resolve();
+function save(){
+  saveChain=saveChain.then(persist).catch(e=>{
+    console.error(e);
+    toast('Gagal menyimpan. Ekspor backup segera.','err');
+  });
+  return saveChain;
+}
+async function persist(){
+  if(cryptoKey){
+    const v=getVault();
+    const salt=v&&v.salt?unb64(v.salt):crypto.getRandomValues(new Uint8Array(16));
+    localStorage.setItem(VAULT_KEY,JSON.stringify(await sealObj(db,cryptoKey,salt)));
+    localStorage.removeItem(DB_KEY);   /* jangan tinggalkan salinan polos */
+  }else{
+    localStorage.setItem(DB_KEY,JSON.stringify(db));
+  }
+}
+function loadPlain(){
   try{ const raw=localStorage.getItem(DB_KEY); if(raw) return migrate(JSON.parse(raw)); }catch(e){}
   return blank();
 }
@@ -449,6 +597,7 @@ function migrate(d){
   if(!d.settings||typeof d.settings!=='object') d.settings={};
   d.settings.nama=d.settings.nama||''; d.settings.alamat=d.settings.alamat||'';
   d.settings.ttd=d.settings.ttd||''; d.settings.prefix=d.settings.prefix||'TT';
+  if(typeof d.settings.idleMin!=='number') d.settings.idleMin=10;
   d.nota.forEach(n=>{
     if(!n.id) n.id=uid();
     if(n.tanggal&&!n.tglNota) n.tglNota=n.tanggal;
@@ -462,11 +611,6 @@ function migrate(d){
   d.ttCounter=Math.max(d.ttCounter,d.tt.length);
   return d;
 }
-function save(){
-  try{ localStorage.setItem(DB_KEY,JSON.stringify(db)); }
-  catch(e){ toast('Gagal menyimpan. Penyimpanan browser penuh — ekspor backup lalu hapus data lama.','err'); }
-}
-
 /* ---------- helpers ---------- */
 const rp=n=>'Rp '+(Number(n)||0).toLocaleString('id-ID');
 const digits=s=>(s==null?'':String(s)).replace(/\D/g,'');
@@ -887,25 +1031,33 @@ function renderRiwayat(){
 
 /* ---------- backup ---------- */
 $('#btn-export').onclick=()=>{
-  const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});
-  const url=URL.createObjectURL(blob), a=document.createElement('a');
-  a.href=url; a.download=`backup-nota-sales-${todayISO()}.json`;
-  document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(()=>URL.revokeObjectURL(url),1000);            /* FIX: revoke setelah unduh */
-  toast('Backup diunduh.','ok');
+  const go2=()=>{ download(JSON.stringify(db,null,2),`backup-nota-sales-${todayISO()}.json`); toast('Backup diunduh.','ok'); };
+  if(cryptoKey) confirmBox('Backup tanpa kunci?','File ini bisa dibaca siapa pun yang menemukannya — termasuk semua nominal dan rekening supplier.',go2,'Tetap unduh',true);
+  else go2();
 };
 $('#btn-import').onclick=()=>$('#import-file').click();
 $('#import-file').onchange=e=>{
   const file=e.target.files[0]; if(!file) return;
   const r=new FileReader();
-  r.onload=()=>{
+  r.onload=async()=>{
     let data;
     try{ data=JSON.parse(r.result); }catch(err){ toast('File bukan JSON yang valid.','err'); e.target.value=''; return; }
+
+    if(data&&data.enc===true&&data.ct&&data.salt&&data.iv){
+      if(!hasCrypto()){ toast('Browser ini tidak bisa membuka backup terkunci.','err'); e.target.value=''; return; }
+      const pw=window.prompt('Backup ini terkunci. Masukkan sandinya:');
+      if(!pw){ e.target.value=''; return; }
+      try{
+        const key=await deriveKey(pw,unb64(data.salt));
+        data=await openObj(data,key);
+      }catch(err){ toast('Sandi salah atau file rusak.','err'); e.target.value=''; return; }
+    }
+
     if(!data||!Array.isArray(data.nota)){ toast('File ini bukan backup Nota Sales.','err'); e.target.value=''; return; }
     confirmBox('Impor backup?',`File berisi ${data.nota.length} nota dan ${Array.isArray(data.tt)?data.tt.length:0} tanda terima. Data saat ini akan diganti.`,()=>{
       db=migrate(data);                                       /* FIX: impor lewat migrate */
       save(); selected.clear(); editingId=null; lastTT=null;
-      syncSettings(); refreshDatalists(); renderRekap(); renderRiwayat();
+      syncSettings(); refreshDatalists(); renderRekap(); renderRiwayat(); syncSecurityUI();
       toast('Data dipulihkan.','ok'); go('rekap');
     },'Ya, impor');
     e.target.value='';
@@ -914,9 +1066,11 @@ $('#import-file').onchange=e=>{
   r.readAsText(file);
 };
 $('#btn-reset-all').onclick=()=>{
-  confirmBox('Hapus semua data?','Seluruh nota, riwayat TT, dan pengaturan akan dihapus permanen. Pastikan kamu sudah mengunduh backup.',()=>{
+  confirmBox('Hapus semua data?','Seluruh nota, riwayat TT, sandi, dan pengaturan akan dihapus permanen. Pastikan kamu sudah mengunduh backup.',()=>{
+    cryptoKey=null; clearTimeout(idleTimer);
+    localStorage.removeItem(VAULT_KEY); localStorage.removeItem(DB_KEY); localStorage.removeItem(GUARD_KEY);
     db=blank(); save(); selected.clear(); editingId=null; lastTT=null;
-    syncSettings(); refreshDatalists(); renderRekap(); renderRiwayat();
+    syncSettings(); refreshDatalists(); renderRekap(); renderRiwayat(); syncSecurityUI();
     toast('Semua data dihapus.'); go('rekap');
   },'Hapus semua',true);
 };
@@ -935,9 +1089,166 @@ $('#btn-save-set').onclick=()=>{
   save(); syncSettings(); toast('Pengaturan disimpan.','ok');
 };
 
-/* ---------- init ---------- */
-syncSettings(); refreshDatalists(); renderRekap(); renderRiwayat();
-if(!db.settings.nama && !db.nota.length) go('set');
+/* ===================== KEAMANAN: UI ===================== */
+let lockMode='unlock';   /* 'unlock' | 'setup' | 'change' */
+const L={box:$('#lock'),pw:$('#lock-pw'),pw2:$('#lock-pw2'),go:$('#lock-go'),skip:$('#lock-skip'),
+         msg:$('#lock-msg'),title:$('#lock-title'),sub:$('#lock-sub'),mark:$('#lock-mark'),foot:$('#lock-foot')};
+
+function lockMsg(t){ L.msg.textContent=t||''; L.msg.classList.toggle('show',!!t); }
+function showLock(mode){
+  lockMode=mode; lockMsg(''); L.pw.value=''; L.pw2.value='';
+  const setup=mode==='setup'||mode==='change';
+  L.pw2.style.display=setup?'block':'none';
+  L.skip.style.display=mode==='setup'?'inline-flex':'none';
+  L.mark.textContent=setup?'🔑':'🔒';
+  L.title.textContent=mode==='setup'?'Buat sandi':mode==='change'?'Ganti sandi':'Aplikasi terkunci';
+  L.sub.textContent=setup?'Minimal 8 karakter. Sandi ini mengenkripsi seluruh data notamu.':'Masukkan sandi untuk membuka data nota.';
+  L.pw.placeholder=setup?'Sandi baru':'Sandi';
+  L.pw.autocomplete=setup?'new-password':'current-password';
+  L.go.textContent=setup?'Simpan sandi':'Buka';
+  L.foot.textContent=setup?'Sandi tidak bisa dipulihkan. Catat di tempat aman.':'Sandi tidak dikirim ke mana pun.';
+  L.box.classList.add('show');
+  setTimeout(()=>L.pw.focus(),50);
+  tickLockout();
+}
+function hideLock(){ L.box.classList.remove('show'); }
+
+let lockoutIv=null;
+function tickLockout(){
+  clearInterval(lockoutIv);
+  const upd=()=>{
+    const s=lockoutLeft();
+    if(lockMode!=='unlock'||s<=0){ L.go.disabled=false; L.pw.disabled=false; if(lockMode==='unlock')lockMsg(''); clearInterval(lockoutIv); return; }
+    L.go.disabled=true; L.pw.disabled=true;
+    lockMsg(`Terlalu banyak percobaan. Coba lagi dalam ${s} detik.`);
+  };
+  upd(); lockoutIv=setInterval(upd,1000);
+}
+
+async function doUnlock(pw){
+  const v=getVault(); if(!v) return false;
+  const key=await deriveKey(pw,unb64(v.salt));
+  const obj=await openObj(v,key);   /* sandi salah -> throw; AES-GCM memverifikasi sendiri */
+  cryptoKey=key; db=migrate(obj); clearFails();
+  return true;
+}
+
+L.go.onclick=async()=>{
+  const pw=L.pw.value;
+  L.go.disabled=true;
+
+  if(lockMode==='unlock'){
+    if(lockoutLeft()>0){ L.go.disabled=false; return; }
+    if(!pw){ lockMsg('Masukkan sandi.'); L.go.disabled=false; return; }
+    L.go.textContent='Membuka…';
+    try{
+      await doUnlock(pw);
+      hideLock(); startApp(); toast('Terbuka.','ok');
+    }catch(e){
+      const g=noteFail();
+      lockMsg(g.until>Date.now()?'Sandi salah. Tunggu sebentar.':`Sandi salah. Percobaan ke-${g.fails}.`);
+      L.pw.value=''; tickLockout();
+    }
+    L.go.textContent='Buka'; L.go.disabled=false; return;
+  }
+
+  const pw2=L.pw2.value;
+  if(pw.length<8){ lockMsg('Sandi minimal 8 karakter.'); L.go.disabled=false; return; }
+  if(pw!==pw2){ lockMsg('Kedua sandi tidak sama.'); L.go.disabled=false; return; }
+  L.go.textContent='Mengenkripsi…';
+  try{
+    const salt=crypto.getRandomValues(new Uint8Array(16));
+    cryptoKey=await deriveKey(pw,salt);
+    localStorage.setItem(VAULT_KEY,JSON.stringify(await sealObj(db,cryptoKey,salt)));
+    localStorage.removeItem(DB_KEY);
+    clearFails(); hideLock();
+    if(lockMode==='setup') startApp();
+    syncSecurityUI(); armIdle();
+    toast('Sandi aktif. Data kini terenkripsi.','ok');
+  }catch(e){ lockMsg('Gagal mengenkripsi: '+e.message); }
+  L.go.disabled=false;
+};
+L.pw.onkeydown=L.pw2.onkeydown=e=>{ if(e.key==='Enter') L.go.click(); };
+L.skip.onclick=()=>{ hideLock(); startApp(); };
+
+function lockNow(){
+  if(!cryptoKey) return;
+  cryptoKey=null; db=blank(); selected.clear(); editingId=null; lastTT=null;
+  $('#tt-doc-print').innerHTML=''; $('#tt-doc-live').innerHTML='';
+  clearTimeout(idleTimer);
+  showLock('unlock');
+}
+function armIdle(){
+  clearTimeout(idleTimer);
+  const m=Number(db.settings.idleMin)||0;
+  if(!cryptoKey||!m) return;
+  idleTimer=setTimeout(()=>{ lockNow(); toast('Terkunci otomatis.'); },m*60000);
+}
+['mousemove','keydown','click','scroll','touchstart'].forEach(ev=>
+  window.addEventListener(ev,()=>{ if(cryptoKey&&db.settings.idleMin) armIdle(); },{passive:true}));
+
+function syncSecurityUI(){
+  const on=!!cryptoKey;
+  $('#sec-dot').className=on?'dot-on':'dot-off';
+  $('#sec-desc').textContent=on
+    ? 'Aktif. Data di browser ini tersimpan terenkripsi (AES-256).'
+    : 'Belum aktif. Siapa pun yang membuka browser ini bisa melihat semua nota.';
+  $('#btn-set-pw').style.display=on?'none':'inline-flex';
+  $('#btn-chg-pw').style.display=on?'inline-flex':'none';
+  $('#btn-del-pw').style.display=on?'inline-flex':'none';
+  $('#row-autolock').style.display=on?'flex':'none';
+  $('#row-lock-now').style.display=on?'flex':'none';
+  $('#sec-idle').value=String(db.settings.idleMin||0);
+  $('#btn-export-enc').style.display=on?'inline-flex':'none';
+  $('#bk-desc').innerHTML=on
+    ? 'Backup terkunci butuh sandimu untuk dibuka. Backup biasa bisa dibaca siapa saja.'
+    : 'Unduh semua nota, riwayat TT, dan pengaturan sebagai satu file <b>.json</b>.';
+}
+$('#btn-set-pw').onclick=()=>{
+  if(!hasCrypto()){ toast('Browser ini tidak mendukung enkripsi di sini. Buka lewat alamat https.','err'); return; }
+  showLock('setup'); L.skip.style.display='none';
+};
+$('#btn-chg-pw').onclick=()=>showLock('change');
+$('#btn-del-pw').onclick=()=>{
+  confirmBox('Matikan sandi?','Data akan disimpan tanpa enkripsi. Siapa pun yang memakai PC ini bisa membacanya.',async()=>{
+    cryptoKey=null; localStorage.removeItem(VAULT_KEY);
+    clearTimeout(idleTimer); await save(); syncSecurityUI(); toast('Sandi dimatikan.');
+  },'Matikan',true);
+};
+$('#btn-lock-now').onclick=lockNow;
+$('#sec-idle').onchange=e=>{ db.settings.idleMin=Number(e.target.value)||0; save(); armIdle(); toast('Kunci otomatis diperbarui.','ok'); };
+
+/* ---------- backup terenkripsi ---------- */
+function download(text,name){
+  const url=URL.createObjectURL(new Blob([text],{type:'application/json'}));
+  const a=document.createElement('a'); a.href=url; a.download=name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+$('#btn-export-enc').onclick=async()=>{
+  if(!cryptoKey) return;
+  const v=getVault();
+  const box=await sealObj(db,cryptoKey,v?unb64(v.salt):crypto.getRandomValues(new Uint8Array(16)));
+  download(JSON.stringify(box,null,2),`backup-terkunci-${todayISO()}.json`);
+  toast('Backup terkunci diunduh.','ok');
+};
+
+/* ===================== BOOT ===================== */
+function startApp(){
+  syncSettings(); refreshDatalists(); renderRekap(); renderRiwayat(); syncSecurityUI(); armIdle();
+  if(!db.settings.nama && !db.nota.length) go('set');
+}
+(function boot(){
+  if(hasVault()){
+    if(!hasCrypto()){
+      alert('Data ini terenkripsi, tapi browser tidak menyediakan Web Crypto di sini. Buka lewat alamat https:// (GitHub Pages).');
+      return;
+    }
+    showLock('unlock');
+  }else{
+    db=loadPlain(); startApp();
+  }
+})();
 </script>
 </body>
 </html>
